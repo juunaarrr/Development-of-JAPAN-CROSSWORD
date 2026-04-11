@@ -5,7 +5,7 @@ from PyQt6.QtGui import QFont, QPixmap
 from Grid import GameGrid
 
 
-class MainWindow(QMainWindow):
+class GameWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         central_widget = QWidget()
@@ -15,9 +15,14 @@ class MainWindow(QMainWindow):
 
         #button
         button = QPushButton("Начать новую игру", central_widget)
-        button.setFixedSize(210,80)
-        button.move(675,650)
-        button.setStyleSheet("background-color: #D8B4FE;")
+        button.setFixedSize(270,80)
+        button.move(645,650)
+        button.setStyleSheet("""
+                        QPushButton {
+                            background-color: #D8B4FE;
+                            border-radius: 20px;
+                        }
+                        """)
         fontbut = QFont()
         fontbut.setPointSize(14)
         fontbut.setFamily("Montserrat")
@@ -57,10 +62,8 @@ class MainWindow(QMainWindow):
         self.game_grid.move(680, 360)
 
         self.showMaximized()
-
-
-
-app = QApplication(sys.argv)
-window = MainWindow()
-window.show()
-app.exec()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = GameWindow()
+    window.show()
+    app.exec()
