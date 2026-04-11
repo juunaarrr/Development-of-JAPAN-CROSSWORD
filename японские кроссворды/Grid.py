@@ -5,23 +5,24 @@ import level_loader
 
 
 class GameGrid(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, play_window=None):
         super().__init__(parent)
+        self.play_window = play_window
         self.rows = 5
         self.cols = 5
 
-        # уровень №1
         level_data = level_loader.load_level(1)
 
         if level_data:
             self.solution = level_data["solution"]
+        else:
+            self.solution = [[0] * 5 for _ in range(5)]
 
         self.cells = [[0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0]]
-        # 0 = пусто, 1 = закрашено, 2 = крестик
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -54,18 +55,54 @@ class GameGrid(QWidget):
 
         if 0 <= row < self.rows and 0 <= col < self.cols:
 
+            # ЛКМ - закрашивание
             if event.button() == Qt.MouseButton.LeftButton:
                 if self.cells[row][col] == 1:
                     self.cells[row][col] = 0
                 else:
                     if self.solution[row][col] == 1:
                         self.cells[row][col] = 1
+                    else:
+                        if self.play_window:
+                            self.play_window.lives -= 1
+                            self.play_window.update_hearts()
+                            if self.play_window.lives <= 0:
+                                self.play_window.game_over()
+                        return
 
+            # ПКМ - крестик
             elif event.button() == Qt.MouseButton.RightButton:
                 if self.cells[row][col] == 2:
                     self.cells[row][col] = 0
                 else:
                     if self.solution[row][col] == 0:
                         self.cells[row][col] = 2
+                    else:
+                        if self.play_window:
+                            self.play_window.lives -= 1
+                            self.play_window.update_hearts()
+                            if self.play_window.lives <= 0:
+                                self.play_window.game_over()
+                        return
 
             self.update()
+            self.check_win()
+
+#проверка победы
+    def check_win(self):
+        for row in range(self.rows):
+            for col in range(self.cols):
+                if self.solution[row][col] == 1:
+                    if self.cells[row][col] != 1:
+                        return False
+                else:  # solution[row][col] == 0
+                    if self.cells[row][col] == 1:
+                        return False
+
+        if self.play_window:
+            self.play_window.show_win()
+        return True
+
+    def reset_grid(self):
+        self.cells = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
+        self.update()
