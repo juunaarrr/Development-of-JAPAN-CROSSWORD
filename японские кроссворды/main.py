@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
 
     def on_button_click(self):
         if self.extra_window is None:
-            self.extra_window = GameWindow()
+            self.extra_window = GameWindow(self)
         self.extra_window.show()
         self.hide()
 
