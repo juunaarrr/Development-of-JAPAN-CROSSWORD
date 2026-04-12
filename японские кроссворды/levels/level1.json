@@ -1,5 +1,6 @@
 {
-  "name": "Уровень 1 - Смайлик",
+  "name": "Смайлик",
+  "number": 1,
   "size": 5,
   "difficulty": 1,
   "solution": [
