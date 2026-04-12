@@ -1,7 +1,8 @@
 import sys
 from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QMainWindow, QApplication
 from PyQt6.QtGui import QFont
-from PlayWindow import GameWindow
+from LevelsWindow import LevelWindow
+from PyQt6.QtCore import Qt
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -13,14 +14,20 @@ class MainWindow(QMainWindow):
 
         #button1
         button1 = QPushButton("Начать новую игру", central_widget)
-        button1.setFixedSize(270, 80)
-        button1.move(630, 400)
+        button1.setFixedSize(380, 100)
+        button1.move(585, 400)
         button1.setStyleSheet("""
-        QPushButton {
-            background-color: #D8B4FE;
-            border-radius: 20px;
-        }
-        """)
+                    QPushButton {
+                        background-color: #D8B4FE;
+                        border-radius: 20px;
+                        font-size: 30px;
+                        font-weight: bold;
+                        color: white;
+                    }
+                    QPushButton:hover {
+                        background-color: #C4A4EE;
+                    }
+                """)
         fontbut = QFont()
         fontbut.setPointSize(14)
         fontbut.setFamily("Montserrat")
@@ -30,13 +37,19 @@ class MainWindow(QMainWindow):
 
         #button2
         button2 = QPushButton("Продолжить", central_widget)
-        button2.setFixedSize(270, 80)
-        button2.move(630, 550)
+        button2.setFixedSize(380, 100)
+        button2.move(585, 550)
         button2.setStyleSheet("""
-                QPushButton {
-                    background-color: #A670D9;
-                    border-radius: 20px;
-                }
+                    QPushButton {
+                        background-color: #A670D9;
+                        border-radius: 20px;
+                        font-size: 30px;
+                        font-weight: bold;
+                        color: white;
+                    }
+                    QPushButton:hover {
+                        background-color: #C4A4EE;
+                    }
                 """)
         fontbut = QFont()
         fontbut.setPointSize(14)
@@ -54,15 +67,18 @@ class MainWindow(QMainWindow):
         label1.setFont(font)
         label1.setStyleSheet("color: black;")
 
-        self.showMaximized()
-
+        self.showFullScreen()
         self.extra_window = None
 
     def on_button_click(self):
         if self.extra_window is None:
-            self.extra_window = GameWindow(self)
+            self.extra_window = LevelWindow(self)
         self.extra_window.show()
         self.hide()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            QApplication.quit()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
