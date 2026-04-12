@@ -19,11 +19,17 @@ class GameWindow(QMainWindow):
         button.setFixedSize(270, 80)
         button.move(645, 650)
         button.setStyleSheet("""
-                        QPushButton {
-                            background-color: #D8B4FE;
-                            border-radius: 20px;
-                        }
-                        """)
+                    QPushButton {
+                        background-color: #D8B4FE;
+                        border-radius: 20px;
+                        font-size: 20px;
+                        font-weight: bold;
+                        color: white;
+                    }
+                    QPushButton:hover {
+                        background-color: #C4A4EE;
+                    }
+                """)
         fontbut = QFont()
         fontbut.setPointSize(14)
         fontbut.setFamily("Montserrat")
@@ -70,7 +76,11 @@ class GameWindow(QMainWindow):
         self.game_grid.setFixedSize(200, 200)
         self.game_grid.move(680, 360)
 
-        self.showMaximized()
+        self.showFullScreen()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            QApplication.quit()
 
     #обработка жизней
     def update_hearts(self):
@@ -144,7 +154,7 @@ class GameWindow(QMainWindow):
             self.back_to_menu()
 
 
-#диалоговое окно проигрыша
+# диалоговое окно проигрыша
 class LoseDialog(QDialog):
     def __init__(self, title, text, button1_text, button2_text, parent=None):
         super().__init__(parent)
