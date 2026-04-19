@@ -4,6 +4,67 @@ from PyQt6.QtWidgets import QMainWindow, QWidget, QScrollArea, QLabel, QVBoxLayo
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 import level_loader
+from PlayWindow import GameWindow
+
+# карточка уровня
+class LevelCard(QFrame):
+    def __init__(self, level_data, parent=None):
+        super().__init__(parent)
+        self.level_data = level_data
+        self.level_num = level_data.get("number", 0)
+
+        self.setFixedSize(400, 450)
+        self.setStyleSheet("""
+            QFrame {
+                background-color: white;
+            }
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+
+        # название
+        name = level_data.get("name")
+        level_name = QLabel(name)
+        level_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        level_name.setFont(QFont("Montserrat", 18, QFont.Weight.Bold))
+        level_name.setWordWrap(True)
+        level_name.setStyleSheet("color: black;")
+        layout.addWidget(level_name)
+
+        # сложность
+        difficulty = level_data.get("difficulty", 1)
+        difficulty_label = QLabel(f"Сложность {difficulty}/5")
+        difficulty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        difficulty_label.setFont(QFont("Montserrat", 15))
+        difficulty_label.setStyleSheet("color: black;")
+        layout.addWidget(difficulty_label)
+
+        layout.addStretch()
+        # кнопка
+        button = QPushButton(f"Уровень {self.level_num}")
+        button.setFixedSize(180, 45)
+        button.setStyleSheet("""
+            QPushButton {
+                background-color: #D8B4FE;
+                border-radius: 20px;
+                font-size: 17px;
+                font-weight: bold;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #C4A4EE;
+            }
+        """)
+        button.clicked.connect(self.on_play)
+        layout.addWidget(button, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def on_play(self):
+        parent_window = self.window()
+        if hasattr(parent_window, 'open_level'):
+            parent_window.open_level(self.level_num)
 
 # окно выбора уровня
 class LevelWindow(QMainWindow):
@@ -74,10 +135,8 @@ class LevelWindow(QMainWindow):
 
     def open_level(self, level_num):
         from PlayWindow import GameWindow
-
         if not hasattr(self, 'game_window'):
             self.game_window = GameWindow(self)
-
         self.game_window.set_level(level_num)
         self.game_window.show()
         self.hide()
@@ -86,65 +145,6 @@ class LevelWindow(QMainWindow):
         if event.key() == Qt.Key.Key_Escape:
             QApplication.quit()
 
-
-class LevelCard(QFrame):
-    def __init__(self, level_data, parent=None):
-        super().__init__(parent)
-        self.level_data = level_data
-        self.level_num = level_data.get("number", 0)
-
-        self.setFixedSize(400, 450)
-        self.setStyleSheet("""
-            QFrame {
-                background-color: white;
-            }
-        """)
-
-        layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        layout.setSpacing(15)
-        layout.setContentsMargins(20, 20, 20, 20)
-
-        # название
-        name = level_data.get("name")
-        level_name = QLabel(name)
-        level_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        level_name.setFont(QFont("Montserrat", 18, QFont.Weight.Bold))
-        level_name.setWordWrap(True)
-        level_name.setStyleSheet("color: black;")
-        layout.addWidget(level_name)
-
-        # сложность
-        difficulty = level_data.get("difficulty", 1)
-        difficulty_label = QLabel(f"Сложность {difficulty}/5")
-        difficulty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        difficulty_label.setFont(QFont("Montserrat", 15))
-        difficulty_label.setStyleSheet("color: black;")
-        layout.addWidget(difficulty_label)
-
-        layout.addStretch()
-        # кнопка
-        button = QPushButton(f"Уровень {self.level_num}")
-        button.setFixedSize(180, 45)
-        button.setStyleSheet("""
-            QPushButton {
-                background-color: #D8B4FE;
-                border-radius: 20px;
-                font-size: 17px;
-                font-weight: bold;
-                color: white;
-            }
-            QPushButton:hover {
-                background-color: #C4A4EE;
-            }
-        """)
-        button.clicked.connect(self.on_play)
-        layout.addWidget(button, alignment=Qt.AlignmentFlag.AlignCenter)
-
-    def on_play(self):
-        parent_window = self.window()
-        if hasattr(parent_window, 'open_level'):
-            parent_window.open_level(self.level_num)
 
 
 if __name__ == '__main__':

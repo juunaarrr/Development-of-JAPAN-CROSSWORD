@@ -1,80 +1,83 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget, QPushButton, QDialog, QVBoxLayout
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QFont, QPixmap, QPainter
+from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont, QPixmap
 from Grid import GameGrid
+from level_loader import load_level
 
 
 class GameWindow(QMainWindow):
     def __init__(self, menu_window=None):
         super().__init__()
         self.menu_window = menu_window
+        self.current_level = 1
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         central_widget.setStyleSheet("background-color: white;")
         self.setWindowTitle("Японские кроссворды")
 
-        #кнопка "начать новую игру"
-        button = QPushButton("Начать новую игру", central_widget)
-        button.setFixedSize(270, 80)
-        button.move(645, 650)
-        button.setStyleSheet("""
-                    QPushButton {
-                        background-color: #D8B4FE;
-                        border-radius: 20px;
-                        font-size: 20px;
-                        font-weight: bold;
-                        color: white;
-                    }
-                    QPushButton:hover {
-                        background-color: #C4A4EE;
-                    }
-                """)
-        fontbut = QFont()
-        fontbut.setPointSize(14)
-        fontbut.setFamily("Montserrat")
-        fontbut.setBold(True)
-        button.setFont(fontbut)
+        # ГЛАВНЫЙ LAYOUT (вертикальный, по центру)
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        main_layout.setSpacing(20)
 
-        #текст
-        label1 = QLabel("Уровень 1", central_widget)
-        label2 = QLabel("Сложность 1/5", central_widget)
-        label1.move(720, 70)
-        label2.move(700, 100)
-        font = QFont()
-        font.setPointSize(16)
-        font.setFamily("Montserrat")
-        font.setBold(True)
-        label1.setFont(font)
-        label2.setFont(font)
-        label1.setStyleSheet("color: black;")
-        label2.setStyleSheet("color: black;")
+        # Текст
+        self.label1 = QLabel("Уровень 1")
+        self.label2 = QLabel("Сложность 1/5")
+        font = QFont("Montserrat", 16, QFont.Weight.Bold)
+        self.label1.setFont(font)
+        self.label2.setFont(font)
+        self.label1.setStyleSheet("color: black;")
+        self.label2.setStyleSheet("color: black;")
+        self.label1.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        #сердечки
+        main_layout.addWidget(self.label1)
+        main_layout.addWidget(self.label2)
+
+        # Сердечки (горизонтальный layout)
+        hearts_layout = QHBoxLayout()
+        hearts_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        hearts_layout.setSpacing(10)
+
         self.lives = 3
-        pixmap = QPixmap("heart.png")
-        pixmap = pixmap.scaled(50, 40)
+        heart_pixmap = QPixmap("heart.png").scaled(50, 40)
 
-        heart1 = QLabel(central_widget)
-        heart1.setPixmap(pixmap)
-        heart1.move(700, 160)
+        self.heart1 = QLabel()
+        self.heart2 = QLabel()
+        self.heart3 = QLabel()
+        self.heart1.setPixmap(heart_pixmap)
+        self.heart2.setPixmap(heart_pixmap)
+        self.heart3.setPixmap(heart_pixmap)
 
-        heart2 = QLabel(central_widget)
-        heart2.setPixmap(pixmap)
-        heart2.move(750, 160)
+        hearts_layout.addWidget(self.heart1)
+        hearts_layout.addWidget(self.heart2)
+        hearts_layout.addWidget(self.heart3)
 
-        heart3 = QLabel(central_widget)
-        heart3.setPixmap(pixmap)
-        heart3.move(800, 160)
+        main_layout.addLayout(hearts_layout)
 
-        self.heart1 = heart1
-        self.heart2 = heart2
-        self.heart3 = heart3
-
-        #сетка
+        # Сетка (игровое поле)
         self.game_grid = GameGrid(central_widget, self)
-        self.game_grid.setFixedSize(200, 200)
-        self.game_grid.move(680, 360)
+        self.game_grid.setFixedSize(450, 450)
+        main_layout.addWidget(self.game_grid, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Кнопка
+        self.start_btn = QPushButton("Начать новую игру")
+        self.start_btn.setFixedSize(270, 80)
+        self.start_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #D8B4FE;
+                border-radius: 20px;
+                font-size: 20px;
+                font-weight: bold;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #C4A4EE;
+            }
+        """)
+        main_layout.addWidget(self.start_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.showFullScreen()
 
@@ -82,29 +85,22 @@ class GameWindow(QMainWindow):
         if event.key() == Qt.Key.Key_Escape:
             QApplication.quit()
 
-    #обработка жизней
     def update_hearts(self):
         full = QPixmap("heart.png").scaled(50, 40)
-        empty = QPixmap(full.size())
-        empty.fill(Qt.GlobalColor.transparent)
-        p = QPainter(empty)
-        p.drawPixmap(0, 0, full)
-        p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
-        p.fillRect(empty.rect(), Qt.GlobalColor.white)
-        p.end()
+        empty = QPixmap("heart_empty.png").scaled(50, 40)
 
         if self.lives == 3:
             self.heart1.setPixmap(full)
             self.heart2.setPixmap(full)
             self.heart3.setPixmap(full)
         elif self.lives == 2:
-            self.heart1.setPixmap(empty)
+            self.heart1.setPixmap(full)
             self.heart2.setPixmap(full)
-            self.heart3.setPixmap(full)
+            self.heart3.setPixmap(empty)
         elif self.lives == 1:
-            self.heart1.setPixmap(empty)
+            self.heart1.setPixmap(full)
             self.heart2.setPixmap(empty)
-            self.heart3.setPixmap(full)
+            self.heart3.setPixmap(empty)
         elif self.lives == 0:
             self.heart1.setPixmap(empty)
             self.heart2.setPixmap(empty)
@@ -120,140 +116,20 @@ class GameWindow(QMainWindow):
         if self.menu_window is not None:
             self.menu_window.show()
 
-    def game_over(self):
-        dialog = LoseDialog(
-            "Упс!",
-            "Жизни закончились! Выберите дальнейшее действие.",
-            "Главное меню",
-            "Новая игра",
-            self,
+    def set_level(self, level_num):
+        self.current_level = level_num
+        level_data = load_level(level_num)
+        self.label1.setText(level_data["name"])
+        self.label2.setText(f"Сложность {level_data['difficulty']}/5")
+        self.game_grid.set_level(
+            level_num,
+            level_data["solution"],
+            level_data.get("rows_hints", []),
+            level_data.get("cols_hints", [])
         )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        if dialog.result == 1:
-            self.back_to_menu()
-        else:
-            self.reset_game()
+        self.lives = 3
+        self.update_hearts()
 
-    def show_win(self):
-        dialog = WinDialog(
-            "Победа!",
-            "Поздравляем! Кроссворд решён верно.",
-            "Новая игра",
-            "Следующий уровень",
-            "Главное меню",
-            self,
-        )
-        if dialog.exec() != QDialog.DialogCode.Accepted:
-            return
-        if dialog.result == 1:
-            self.reset_game()
-        elif dialog.result == 2:
-            self.reset_game()
-        else:
-            self.back_to_menu()
-
-
-# диалоговое окно проигрыша
-class LoseDialog(QDialog):
-    def __init__(self, title, text, button1_text, button2_text, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.setFixedSize(400, 220)
-        self.setStyleSheet("background-color: white;")
-
-        layout = QVBoxLayout(self)
-
-        label = QLabel(text)
-        label.setStyleSheet("font-size: 16px; font-family: Montserrat; padding: 20px;")
-        label.setWordWrap(True)
-        layout.addWidget(label)
-
-        button1 = QPushButton(button1_text)
-        button2 = QPushButton(button2_text)
-
-        button_style = """
-            QPushButton {
-                background-color: #D8B4FE;
-                border-radius: 20px;
-                padding: 10px;
-                font-size: 14px;
-                font-weight: bold;
-                min-width: 150px;
-            }
-            QPushButton:hover {
-                background-color: #C4A4EE;
-            }
-            QPushButton:pressed {
-                background-color: #B494DE;
-            }
-        """
-        button1.setStyleSheet(button_style)
-        button2.setStyleSheet(button_style)
-
-        button1.clicked.connect(lambda: self.done(1))  # Главное меню
-        button2.clicked.connect(lambda: self.done(2))  # Новая игра
-
-        layout.addWidget(button1)
-        layout.addWidget(button2)
-
-    def done(self, result):
-        self.result = result
-        self.accept()
-
-
-# диалоговое окно победы
-class WinDialog(QDialog):
-    def __init__(self, title, text, button1_text, button2_text, button3_text, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle(title)
-        self.setFixedSize(400, 280)
-        self.setStyleSheet("background-color: white;")
-
-        layout = QVBoxLayout(self)
-
-        # текст
-        label = QLabel(text)
-        label.setStyleSheet("font-size: 16px; font-family: Montserrat; padding: 20px;")
-        label.setWordWrap(True)
-        layout.addWidget(label)
-
-        # кнопки
-        button1 = QPushButton(button1_text)
-        button2 = QPushButton(button2_text)
-        button3 = QPushButton(button3_text)
-
-        button_style = """
-            QPushButton {
-                background-color: #D8B4FE;
-                border-radius: 20px;
-                padding: 10px;
-                font-size: 14px;
-                font-weight: bold;
-                min-width: 180px;
-            }
-            QPushButton:hover {
-                background-color: #C4A4EE;
-            }
-            QPushButton:pressed {
-                background-color: #B494DE;
-            }
-        """
-        button1.setStyleSheet(button_style)
-        button2.setStyleSheet(button_style)
-        button3.setStyleSheet(button_style)
-
-        button1.clicked.connect(lambda: self.done(1))  # Новая игра
-        button2.clicked.connect(lambda: self.done(2))  # Следующий уровень
-        button3.clicked.connect(lambda: self.done(3))  # Выйти в главное меню
-
-        layout.addWidget(button1)
-        layout.addWidget(button2)
-        layout.addWidget(button3)
-
-    def done(self, result):
-        self.result = result
-        self.accept()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
