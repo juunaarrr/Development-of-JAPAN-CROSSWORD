@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QPixmap
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QFont, QPixmap, QIcon
 from Grid import GameGrid
 from level_loader import load_level
 
@@ -17,12 +17,12 @@ class GameWindow(QMainWindow):
         central_widget.setStyleSheet("background-color: white;")
         self.setWindowTitle("Японские кроссворды")
 
-        # ГЛАВНЫЙ LAYOUT (вертикальный, по центру)
+        # выравнивание
         main_layout = QVBoxLayout(central_widget)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        main_layout.setSpacing(20)
+        main_layout.setSpacing(15)
 
-        # Текст
+        # текст
         self.label1 = QLabel("Уровень 1")
         self.label2 = QLabel("Сложность 1/5")
         font = QFont("Montserrat", 16, QFont.Weight.Bold)
@@ -36,10 +36,28 @@ class GameWindow(QMainWindow):
         main_layout.addWidget(self.label1)
         main_layout.addWidget(self.label2)
 
-        # Сердечки (горизонтальный layout)
+        # сердечки, кнопка "домик", кнопка "знак вопроса"
         hearts_layout = QHBoxLayout()
         hearts_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        hearts_layout.setSpacing(10)
+        hearts_layout.setSpacing(20)
+
+        # кнопка "домик" должна выводить диалоговое окно (доделать) 
+        self.house_btn = QPushButton()
+        self.house_btn.setFixedSize(50, 50)
+        self.house_btn.setIcon(QIcon("house.png"))
+        self.house_btn.setIconSize(QSize(30, 30))
+        self.house_btn.setStyleSheet("""
+            QPushButton {
+                background-color: white;
+                border-radius: 25px;
+                border: 2px solid black;
+            }
+            QPushButton:hover {
+                background-color: #F0F0F0;
+            }
+        """)
+        self.house_btn.clicked.connect(self.back_to_menu) # переподключить функцию
+        hearts_layout.addWidget(self.house_btn)
 
         self.lives = 3
         heart_pixmap = QPixmap("heart.png").scaled(50, 40)
@@ -57,12 +75,32 @@ class GameWindow(QMainWindow):
 
         main_layout.addLayout(hearts_layout)
 
-        # Сетка (игровое поле)
-        self.game_grid = GameGrid(central_widget, self)
-        self.game_grid.setFixedSize(450, 450)
-        main_layout.addWidget(self.game_grid, alignment=Qt.AlignmentFlag.AlignCenter)
+        # кнопка "правила" должна выводить диалоговое окно с правилами (доделать)
+        self.rules_btn = QPushButton()
+        self.rules_btn.setFixedSize(50, 50)
+        self.rules_btn.setText("?")
+        self.rules_btn.setStyleSheet("""
+            QPushButton {
+                font-size: 24px;
+                color: black;
+                font-weight: bold;
+                background-color: white;
+                border-radius: 25px;
+                border: 2px solid black;
+            }
+            QPushButton:hover {
+                background-color: #F0F0F0;
+            }
+        """)
+        hearts_layout.addWidget(self.rules_btn)
 
-        # Кнопка
+        # сетка
+        self.game_grid = GameGrid(central_widget, self)
+        self.game_grid.setFixedSize(430, 430)
+        main_layout.addWidget(self.game_grid, alignment=Qt.AlignmentFlag.AlignVCenter)
+
+        # кнопка "начать новую игру"
+        # при нажатии выводить диалоговое окно (доделать)
         self.start_btn = QPushButton("Начать новую игру")
         self.start_btn.setFixedSize(270, 80)
         self.start_btn.setStyleSheet("""
@@ -78,6 +116,7 @@ class GameWindow(QMainWindow):
             }
         """)
         main_layout.addWidget(self.start_btn, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.start_btn.clicked.connect(self.reset_game)
 
         self.showFullScreen()
 
@@ -111,10 +150,10 @@ class GameWindow(QMainWindow):
         self.update_hearts()
         self.game_grid.reset_grid()
 
-    def back_to_menu(self):
+    def back_to_menu(self): # неправильная функция, переделать разобраться, чтобы переносило не в окно выбора уровня, а в главное окно
         self.hide()
-        if self.menu_window is not None:
-            self.menu_window.show()
+        if self.parent() and self.parent().parent():
+            self.parent().show()
 
     def set_level(self, level_num):
         self.current_level = level_num

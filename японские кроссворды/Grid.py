@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtGui import QPainter, QFont, QPen
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
 import level_loader
 
 
@@ -20,12 +20,21 @@ class GameGrid(QWidget):
                 level_data.get("cols_hints", [])
             )
 
+    def sizeHint(self):
+        cell_size = 28
+        left_hint_width = 20
+        top_hint_height = 70
+
+        width = left_hint_width + self.cols * cell_size
+        height = top_hint_height + self.rows * cell_size
+        return QSize(width, height)
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setFont(QFont("Montserrat", 10, QFont.Weight.Bold))
 
-        left_hint_width = 60
-        top_hint_height = 60
+        left_hint_width = 20
+        top_hint_height = 70
 
         game_width = self.width() - left_hint_width
         game_height = self.height() - top_hint_height
@@ -60,7 +69,7 @@ class GameGrid(QWidget):
             y = top_hint_height + row * cell_height
             text = ", ".join(map(str, hints))
             painter.drawText(x, y, left_hint_width - 5, cell_height,
-                             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                             Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter,
                              text)
 
             # заливка клеток
@@ -103,8 +112,8 @@ class GameGrid(QWidget):
             painter.drawLine(x, top_hint_height, x, top_hint_height + game_height)
 
     def mousePressEvent(self, event):
-        left_hint_width = 60
-        top_hint_height = 60
+        left_hint_width = 20
+        top_hint_height = 70
 
         game_width = self.width() - left_hint_width
         game_height = self.height() - top_hint_height
@@ -162,7 +171,7 @@ class GameGrid(QWidget):
             self.update()
             self.check_win()
 
-#проверка победы
+# проверка победы
     def check_win(self):
         for row in range(self.rows):
             for col in range(self.cols):
