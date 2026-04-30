@@ -1,10 +1,10 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QDialog
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QFont, QPixmap, QIcon
 from Grid import GameGrid
 from level_loader import load_level
-
+from RulesDialog import RulesDialog
 
 class GameWindow(QMainWindow):
     def __init__(self, menu_window=None):
@@ -41,7 +41,7 @@ class GameWindow(QMainWindow):
         hearts_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hearts_layout.setSpacing(20)
 
-        # кнопка "домик" должна выводить диалоговое окно (доделать) 
+        # кнопка "домик" должна выводить диалоговое окно (доделать)
         self.house_btn = QPushButton()
         self.house_btn.setFixedSize(50, 50)
         self.house_btn.setIcon(QIcon("house.png"))
@@ -75,7 +75,7 @@ class GameWindow(QMainWindow):
 
         main_layout.addLayout(hearts_layout)
 
-        # кнопка "правила" должна выводить диалоговое окно с правилами (доделать)
+        # кнопка "правила"
         self.rules_btn = QPushButton()
         self.rules_btn.setFixedSize(50, 50)
         self.rules_btn.setText("?")
@@ -93,6 +93,7 @@ class GameWindow(QMainWindow):
             }
         """)
         hearts_layout.addWidget(self.rules_btn)
+        self.rules_btn.clicked.connect(self.show_rules)
 
         # сетка
         self.game_grid = GameGrid(central_widget, self)
@@ -100,7 +101,6 @@ class GameWindow(QMainWindow):
         main_layout.addWidget(self.game_grid, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         # кнопка "начать новую игру"
-        # при нажатии выводить диалоговое окно (доделать)
         self.start_btn = QPushButton("Начать новую игру")
         self.start_btn.setFixedSize(270, 80)
         self.start_btn.setStyleSheet("""
@@ -116,7 +116,7 @@ class GameWindow(QMainWindow):
             }
         """)
         main_layout.addWidget(self.start_btn, alignment=Qt.AlignmentFlag.AlignCenter)
-        self.start_btn.clicked.connect(self.reset_game)
+        self.start_btn.clicked.connect(self.show_new_game_dialog)
 
         self.showFullScreen()
 
@@ -152,8 +152,6 @@ class GameWindow(QMainWindow):
 
     def back_to_menu(self): # неправильная функция, переделать разобраться, чтобы переносило не в окно выбора уровня, а в главное окно
         self.hide()
-        if self.parent() and self.parent().parent():
-            self.parent().show()
 
     def set_level(self, level_num):
         self.current_level = level_num
@@ -168,6 +166,80 @@ class GameWindow(QMainWindow):
         )
         self.lives = 3
         self.update_hearts()
+
+    def show_rules(self):
+        dialog = RulesDialog(self)
+        dialog.exec()
+
+    def show_new_game_dialog(self):
+        dialog = NewGameDialog(self)
+        dialog.exec()
+
+class NewGameDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Предупреждение")
+        self.setFixedSize(400, 300)
+        self.setStyleSheet("background-color: white;")
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(15)
+
+        # вопрос
+        title = QLabel("Весь прогресс будет утерян. \n \n Вы уверены, что хотите \n начать новую игру?")
+        title.setStyleSheet("color: black; font-size: 24px; font-weight: bold; font-family: Montserrat")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+
+        # выравнивание для кнопок
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        buttons_layout.setSpacing(20)
+
+        # кнопка "да"
+        yes_btn = QPushButton("Да")
+        yes_btn.setFixedSize(150, 50)
+        yes_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #D8B4FE;
+                border-radius: 20px;
+                font-size: 18px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #C4A4EE;
+            }
+        """)
+        yes_btn.clicked.connect(self.on_yes)
+        buttons_layout.addWidget(yes_btn)
+
+        # кнопка "нет"
+        no_btn = QPushButton("Нет")
+        no_btn.setFixedSize(150, 50)
+        no_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #D8B4FE;
+                border-radius: 20px;
+                font-size: 18px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #C4A4EE;
+            }
+        """)
+        no_btn.clicked.connect(self.accept)
+        buttons_layout.addWidget(no_btn)
+
+        layout.addLayout(buttons_layout)
+
+    def on_yes(self):
+        parent = self.parent()
+        while parent:
+            if isinstance(parent, GameWindow):
+                parent.reset_game()
+                break
+            parent = parent.parent()
+        self.accept()
 
 
 if __name__ == '__main__':
