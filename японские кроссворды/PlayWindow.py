@@ -5,6 +5,7 @@ from PyQt6.QtGui import QFont, QPixmap, QIcon
 from Grid import GameGrid
 from level_loader import load_level
 from RulesDialog import RulesDialog
+from HomepageDialog import HomepageDialog
 
 class GameWindow(QMainWindow):
     def __init__(self, menu_window=None):
@@ -97,7 +98,6 @@ class GameWindow(QMainWindow):
 
         # сетка
         self.game_grid = GameGrid(central_widget, self)
-        self.game_grid.setFixedSize(430, 430)
         main_layout.addWidget(self.game_grid, alignment=Qt.AlignmentFlag.AlignVCenter)
 
         # кнопка "начать новую игру"
@@ -150,8 +150,9 @@ class GameWindow(QMainWindow):
         self.update_hearts()
         self.game_grid.reset_grid()
 
-    def back_to_menu(self): # неправильная функция, переделать разобраться, чтобы переносило не в окно выбора уровня, а в главное окно
-        self.hide()
+    def back_to_menu(self):
+        dialog = HomepageDialog(self)
+        dialog.exec()
 
     def set_level(self, level_num):
         self.current_level = level_num
@@ -179,7 +180,7 @@ class NewGameDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Предупреждение")
-        self.setFixedSize(400, 300)
+        self.setFixedSize(300, 200)
         self.setStyleSheet("background-color: white;")
 
         layout = QVBoxLayout(self)
@@ -187,7 +188,7 @@ class NewGameDialog(QDialog):
 
         # вопрос
         title = QLabel("Весь прогресс будет утерян. \n \n Вы уверены, что хотите \n начать новую игру?")
-        title.setStyleSheet("color: black; font-size: 24px; font-weight: bold; font-family: Montserrat")
+        title.setStyleSheet("color: black; font-size: 18px; font-weight: bold; font-family: Montserrat")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
@@ -198,12 +199,12 @@ class NewGameDialog(QDialog):
 
         # кнопка "да"
         yes_btn = QPushButton("Да")
-        yes_btn.setFixedSize(150, 50)
+        yes_btn.setFixedSize(130, 40)
         yes_btn.setStyleSheet("""
             QPushButton {
                 background-color: #D8B4FE;
                 border-radius: 20px;
-                font-size: 18px;
+                font-size: 16px;
                 font-weight: bold;
             }
             QPushButton:hover {
@@ -215,12 +216,12 @@ class NewGameDialog(QDialog):
 
         # кнопка "нет"
         no_btn = QPushButton("Нет")
-        no_btn.setFixedSize(150, 50)
+        no_btn.setFixedSize(130, 40)
         no_btn.setStyleSheet("""
             QPushButton {
                 background-color: #D8B4FE;
                 border-radius: 20px;
-                font-size: 18px;
+                font-size: 16px;
                 font-weight: bold;
             }
             QPushButton:hover {

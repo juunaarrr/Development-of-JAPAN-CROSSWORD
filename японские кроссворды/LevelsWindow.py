@@ -1,8 +1,9 @@
 import sys
+import os
 from PyQt6.QtWidgets import QMainWindow, QWidget, QScrollArea, QLabel, QVBoxLayout, QPushButton, QFrame, QApplication, \
     QGridLayout
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QPixmap
 import level_loader
 from PlayWindow import GameWindow
 
@@ -41,6 +42,21 @@ class LevelCard(QFrame):
         difficulty_label.setFont(QFont("Montserrat", 15))
         difficulty_label.setStyleSheet("color: black;")
         layout.addWidget(difficulty_label)
+
+        # картинка
+        self.preview_label = QLabel()
+        self.preview_label.setFixedSize(200, 250)
+        self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview_label.setStyleSheet("background-color: #F0F0F0; border-radius: 10px;")
+
+        preview_path = level_data.get("preview")
+        if preview_path and os.path.exists(preview_path):
+            pixmap = QPixmap(preview_path)
+            pixmap = pixmap.scaled(200, 170, Qt.AspectRatioMode.KeepAspectRatio,
+                                   Qt.TransformationMode.SmoothTransformation)
+            self.preview_label.setPixmap(pixmap)
+
+        layout.addWidget(self.preview_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         layout.addStretch()
         # кнопка
@@ -94,6 +110,9 @@ class LevelWindow(QMainWindow):
             QPushButton {
                 background-color: #A670D9;
                 border-radius: 20px;
+                }
+                QPushButton:hover {
+                background-color: #C4A4EE;
             }
         """)
         fontbut = QFont()
