@@ -5,12 +5,14 @@ from PyQt6.QtGui import QFont, QPixmap, QIcon
 from Grid import GameGrid
 from level_loader import load_level
 from RulesDialog import RulesDialog
-from HomepageDialog import HomepageDialog
+from Win import WinWindow
+
 
 class GameWindow(QMainWindow):
-    def __init__(self, menu_window=None):
+    def __init__(self, menu_window=None, main_window=None):
         super().__init__()
         self.menu_window = menu_window
+        self.main_window = main_window
         self.current_level = 1
 
         central_widget = QWidget()
@@ -18,12 +20,10 @@ class GameWindow(QMainWindow):
         central_widget.setStyleSheet("background-color: white;")
         self.setWindowTitle("Японские кроссворды")
 
-        # выравнивание
         main_layout = QVBoxLayout(central_widget)
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.setSpacing(15)
 
-        # текст
         self.label1 = QLabel("Уровень 1")
         self.label2 = QLabel("Сложность 1/5")
         font = QFont("Montserrat", 16, QFont.Weight.Bold)
@@ -37,12 +37,10 @@ class GameWindow(QMainWindow):
         main_layout.addWidget(self.label1)
         main_layout.addWidget(self.label2)
 
-        # сердечки, кнопка "домик", кнопка "знак вопроса"
         hearts_layout = QHBoxLayout()
         hearts_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hearts_layout.setSpacing(20)
 
-        # кнопка "домик" должна выводить диалоговое окно (доделать)
         self.house_btn = QPushButton()
         self.house_btn.setFixedSize(50, 50)
         self.house_btn.setIcon(QIcon("house.png"))
@@ -57,7 +55,7 @@ class GameWindow(QMainWindow):
                 background-color: #F0F0F0;
             }
         """)
-        self.house_btn.clicked.connect(self.back_to_menu) # переподключить функцию
+        self.house_btn.clicked.connect(self.back_to_menu)
         hearts_layout.addWidget(self.house_btn)
 
         self.lives = 3
@@ -76,7 +74,6 @@ class GameWindow(QMainWindow):
 
         main_layout.addLayout(hearts_layout)
 
-        # кнопка "правила"
         self.rules_btn = QPushButton()
         self.rules_btn.setFixedSize(50, 50)
         self.rules_btn.setText("?")
@@ -96,11 +93,9 @@ class GameWindow(QMainWindow):
         hearts_layout.addWidget(self.rules_btn)
         self.rules_btn.clicked.connect(self.show_rules)
 
-        # сетка
         self.game_grid = GameGrid(central_widget, self)
         main_layout.addWidget(self.game_grid, alignment=Qt.AlignmentFlag.AlignVCenter)
 
-        # кнопка "начать новую игру"
         self.start_btn = QPushButton("Начать новую игру")
         self.start_btn.setFixedSize(270, 80)
         self.start_btn.setStyleSheet("""
@@ -150,9 +145,33 @@ class GameWindow(QMainWindow):
         self.update_hearts()
         self.game_grid.reset_grid()
 
+    def next_level(self):
+        next_num = self.current_level + 1
+        if next_num <= 15:
+            self.set_level(next_num)
+
+    def close_game(self):
+        self.close()
+
     def back_to_menu(self):
         dialog = HomepageDialog(self)
         dialog.exec()
+
+    def show_win(self):
+        self.hide()
+        win_window = WinWindow(self, self.main_window if hasattr(self, 'main_window') else None)
+        win_window.show()
+
+    def back_to_main_menu(self):
+        self.hide()
+        if self.menu_window:
+            main = self.menu_window
+            while main and main.__class__.__name__ != "MainWindow":
+                main = main.parent()
+            if main:
+                main.show()
+            else:
+                self.menu_window.show()
 
     def set_level(self, level_num):
         self.current_level = level_num
@@ -176,9 +195,20 @@ class GameWindow(QMainWindow):
         dialog = NewGameDialog(self)
         dialog.exec()
 
+    def game_over(self):
+        dialog = LoseDialog(self)
+        dialog.exec()
+
+
 class NewGameDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowFlags(
+            Qt.WindowType.Dialog |
+            Qt.WindowType.CustomizeWindowHint |
+            Qt.WindowType.WindowTitleHint
+        )
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.setWindowTitle("Предупреждение")
         self.setFixedSize(300, 200)
         self.setStyleSheet("background-color: white;")
@@ -186,18 +216,15 @@ class NewGameDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(15)
 
-        # вопрос
         title = QLabel("Весь прогресс будет утерян. \n \n Вы уверены, что хотите \n начать новую игру?")
         title.setStyleSheet("color: black; font-size: 18px; font-weight: bold; font-family: Montserrat")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
-        # выравнивание для кнопок
         buttons_layout = QHBoxLayout()
         buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         buttons_layout.setSpacing(20)
 
-        # кнопка "да"
         yes_btn = QPushButton("Да")
         yes_btn.setFixedSize(130, 40)
         yes_btn.setStyleSheet("""
@@ -214,7 +241,6 @@ class NewGameDialog(QDialog):
         yes_btn.clicked.connect(self.on_yes)
         buttons_layout.addWidget(yes_btn)
 
-        # кнопка "нет"
         no_btn = QPushButton("Нет")
         no_btn.setFixedSize(130, 40)
         no_btn.setStyleSheet("""
@@ -241,6 +267,221 @@ class NewGameDialog(QDialog):
                 break
             parent = parent.parent()
         self.accept()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            return
+        else:
+            super().keyPressEvent(event)
+
+
+class LoseDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(
+            Qt.WindowType.Dialog |
+            Qt.WindowType.CustomizeWindowHint |
+            Qt.WindowType.WindowTitleHint
+        )
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
+        self.setWindowTitle("Уведомление")
+        self.setFixedSize(300, 200)
+        self.setStyleSheet("background-color: white;")
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(15)
+
+        title = QLabel("Упс!\n Жизни закончились. \n \n Выберите дальнейшее\n действие.")
+        title.setStyleSheet("color: black; font-size: 18px; font-weight: bold; font-family: Montserrat")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        buttons_layout.setSpacing(20)
+
+        homepage_btn = QPushButton("Главное меню")
+        homepage_btn.setFixedSize(130, 40)
+        homepage_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #A670D9;
+                border-radius: 20px;
+                font-size: 16px;
+                font-weight: bold;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #8E56C6;
+            }
+        """)
+        homepage_btn.clicked.connect(self.back_to_main_menu)
+        buttons_layout.addWidget(homepage_btn)
+
+        newgame_btn = QPushButton("Новая игра")
+        newgame_btn.setFixedSize(130, 40)
+        newgame_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #D8B4FE;
+                border-radius: 20px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #C4A4EE;
+            }
+        """)
+        newgame_btn.clicked.connect(self.on_yes)
+        buttons_layout.addWidget(newgame_btn)
+
+        layout.addLayout(buttons_layout)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            return
+        super().keyPressEvent(event)
+
+    def on_yes(self):
+        parent = self.parent()
+        game_window = None
+
+        while parent:
+            if isinstance(parent, GameWindow):
+                game_window = parent
+                break
+            parent = parent.parent()
+
+        self.accept()
+
+        if game_window:
+            game_window.reset_game()
+
+    def back_to_main_menu(self):
+        parent = self.parent()
+        game_window = None
+
+        while parent:
+            if isinstance(parent, GameWindow):
+                game_window = parent
+                break
+            parent = parent.parent()
+
+        self.accept()
+
+        if game_window:
+            game_window.back_to_main_menu()
+
+
+class HomepageDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(
+            Qt.WindowType.Dialog |
+            Qt.WindowType.CustomizeWindowHint |
+            Qt.WindowType.WindowTitleHint
+        )
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
+        self.setWindowTitle("Предупреждение")
+        self.setFixedSize(350, 220)
+        self.setStyleSheet("background-color: white;")
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(15)
+
+        title = QLabel("Сохранить прогресс \nи выйти в главное меню?")
+        title.setStyleSheet("color: black; font-size: 18px; font-weight: bold; font-family: Montserrat")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        buttons_layout.setSpacing(20)
+
+        save_btn = QPushButton("Сохранить")
+        save_btn.setFixedSize(130, 40)
+        save_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #D8B4FE;
+                border-radius: 20px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #C4A4EE;
+            }
+        """)
+        save_btn.clicked.connect(self.on_save)
+        buttons_layout.addWidget(save_btn)
+
+        no_save_btn = QPushButton("Не сохранять")
+        no_save_btn.setFixedSize(130, 40)
+        no_save_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #D8B4FE;
+                border-radius: 20px;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #C4A4EE;
+            }
+        """)
+        no_save_btn.clicked.connect(self.on_no_save)
+        buttons_layout.addWidget(no_save_btn)
+
+        layout.addLayout(buttons_layout)
+
+        cancel_btn = QPushButton("Отмена")
+        cancel_btn.setFixedSize(150, 40)
+        cancel_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #A670D9;
+                border-radius: 20px;
+                font-size: 16px;
+                font-weight: bold;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #8E56C6;
+            }
+        """)
+        cancel_btn.clicked.connect(self.accept)
+        layout.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def on_save(self):
+        parent = self.parent()
+        game_window = None
+
+        while parent:
+            if isinstance(parent, GameWindow):
+                game_window = parent
+                break
+            parent = parent.parent()
+
+        self.accept()
+
+        if game_window:
+            game_window.back_to_main_menu()
+
+    def on_no_save(self):
+        parent = self.parent()
+        game_window = None
+
+        while parent:
+            if isinstance(parent, GameWindow):
+                game_window = parent
+                break
+            parent = parent.parent()
+
+        self.accept()
+
+        if game_window:
+            game_window.back_to_main_menu()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            return
+        else:
+            super().keyPressEvent(event)
 
 
 if __name__ == '__main__':

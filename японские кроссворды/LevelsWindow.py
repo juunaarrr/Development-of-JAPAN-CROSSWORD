@@ -155,7 +155,7 @@ class LevelWindow(QMainWindow):
     def open_level(self, level_num):
         from PlayWindow import GameWindow
         if not hasattr(self, 'game_window'):
-            self.game_window = GameWindow(self)
+            self.game_window = GameWindow(self, self.parent())
         self.game_window.set_level(level_num)
         self.game_window.show()
         self.hide()

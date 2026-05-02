@@ -5,6 +5,12 @@ from PyQt6.QtWidgets import QDialog, QPushButton, QLabel, QVBoxLayout, QHBoxLayo
 class RulesDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowFlags(
+            Qt.WindowType.Dialog |
+            Qt.WindowType.CustomizeWindowHint |
+            Qt.WindowType.WindowTitleHint
+        )
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
         self.setWindowTitle("Правила игры")
         self.setFixedSize(700, 600)
         self.setStyleSheet("background-color: white;")
@@ -45,3 +51,11 @@ class RulesDialog(QDialog):
                 """)
         ok_btn.clicked.connect(self.accept)
         layout.addWidget(ok_btn, alignment=Qt.AlignmentFlag.AlignCenter)
+
+
+    # игнор Esc
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            return
+        else:
+            super().keyPressEvent(event)

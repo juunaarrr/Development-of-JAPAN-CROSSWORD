@@ -5,9 +5,8 @@ import level_loader
 
 
 class GameGrid(QWidget):
-    # базовые настройки
-    CELL_SIZE_SMALL = 34  # для 15x15
-    CELL_SIZE_LARGE = 44  # для 5x5 и 10x10
+    CELL_SIZE_SMALL = 34
+    CELL_SIZE_LARGE = 44
 
     def __init__(self, parent=None, play_window=None):
         super().__init__(parent)
@@ -29,38 +28,31 @@ class GameGrid(QWidget):
                 level_data.get("rows_hints", []),
                 level_data.get("cols_hints", [])
             )
-
+    #возвращаем размер клетки в зависимости от размера сетки
     def get_cell_size(self):
-        """возвращает размер клетки в зависимости от размера поля"""
         if self.rows >= 15:
-            return self.CELL_SIZE_SMALL  # 34 для 15x15
+            return self.CELL_SIZE_SMALL
         else:
-            return self.CELL_SIZE_LARGE  # 44 для 5x5 и 10x10
-
+            return self.CELL_SIZE_LARGE
+    #макимсальное количество подсказок в столбце
     def get_max_col_hints_count(self):
-        """максимальное количество подсказок в одном столбце"""
         if not self.cols_hints:
             return 1
         return max(len(hints) for hints in self.cols_hints)
 
     def get_left_hint_width(self):
-        """ширина области для подсказок строк"""
         max_len = 0
         for hints in self.rows_hints:
             text = ", ".join(map(str, hints))
             max_len = max(max_len, len(text))
-        # ширина = ширина текста + отступы
-        text_width = max_len * 9  # ~9 пикселей на символ
+        text_width = max_len * 9
         return max(text_width + 10, 55)
 
     def get_top_hint_height(self):
-        """высота области для подсказок столбцов"""
         max_count = self.get_max_col_hints_count()
-        # высота = количество строк * высота строки + отступы
         return max(max_count * 20 + 15, 75)
 
     def sizeHint(self):
-        """рекомендуемый размер виджета"""
         left_hint_width = self.get_left_hint_width()
         top_hint_height = self.get_top_hint_height()
         cell_size = self.get_cell_size()
@@ -68,8 +60,8 @@ class GameGrid(QWidget):
         height = top_hint_height + self.rows * cell_size
         return QSize(width, height)
 
+    #отрисовка
     def paintEvent(self, event):
-        """отрисовка всей сетки, подсказок и клеток"""
         painter = QPainter(self)
         painter.setFont(QFont("Montserrat", 11, QFont.Weight.Bold))
 
@@ -80,11 +72,9 @@ class GameGrid(QWidget):
         game_width = self.cols * cell_size
         game_height = self.rows * cell_size
 
-        # затемняем область подсказок для лучшей читаемости (без QColor)
         painter.fillRect(0, 0, left_hint_width, self.height(), Qt.GlobalColor.lightGray)
         painter.fillRect(0, 0, self.width(), top_hint_height, Qt.GlobalColor.lightGray)
 
-        # подсказки столбцов (сверху)
         painter.setPen(Qt.GlobalColor.black)
         for col in range(self.cols):
             hints = self.cols_hints[col] if col < len(self.cols_hints) else []
@@ -92,7 +82,6 @@ class GameGrid(QWidget):
             num_hints = len(hints)
             if num_hints > 0:
                 line_height = painter.fontMetrics().height()
-                # располагаем снизу вверх
                 start_y = top_hint_height - 8
                 for i, hint in enumerate(reversed(hints)):
                     text = str(hint)
@@ -147,8 +136,8 @@ class GameGrid(QWidget):
             x = left_hint_width + col * cell_size
             painter.drawLine(x, top_hint_height, x, top_hint_height + game_height)
 
+    #действия с клеткой
     def apply_action(self, row, col, action):
-        """применяет действие (закрасить/крестик) к одной клетке"""
         if action == 'paint':
             if self.cells[row][col] == 1:
                 self.cells[row][col] = 0
@@ -177,8 +166,8 @@ class GameGrid(QWidget):
                     return
         self.update()
 
+    #нажатие мыши
     def mousePressEvent(self, event):
-        """нажатие мыши - начало перетаскивания"""
         left_hint_width = self.get_left_hint_width()
         top_hint_height = self.get_top_hint_height()
         cell_size = self.get_cell_size()
@@ -202,8 +191,8 @@ class GameGrid(QWidget):
                 self.apply_action(row, col, 'cross')
             self.check_win()
 
+    #закраска при перетаскивании мыши
     def mouseMoveEvent(self, event):
-        """движение мыши с зажатой кнопкой - непрерывное закрашивание"""
         if not self.is_dragging:
             return
 
@@ -233,13 +222,12 @@ class GameGrid(QWidget):
                         self.update()
 
     def mouseReleaseEvent(self, event):
-        """отпускание кнопки мыши - конец перетаскивания"""
         self.is_dragging = False
         self.last_action = None
         self.check_win()
 
+    #проверка победы
     def check_win(self):
-        """проверка победы"""
         for row in range(self.rows):
             for col in range(self.cols):
                 if self.solution[row][col] == 1 and self.cells[row][col] != 1:
@@ -250,13 +238,13 @@ class GameGrid(QWidget):
             self.play_window.show_win()
         return True
 
+    #сброс сетки
     def reset_grid(self):
-        """сброс всех клеток"""
         self.cells = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
         self.update()
 
+    #загрузка уровня
     def set_level(self, level_num, solution, rows_hint=None, cols_hint=None):
-        """загрузка нового уровня"""
         self.solution = solution
         self.rows = len(solution)
         self.cols = len(solution[0])
@@ -264,7 +252,7 @@ class GameGrid(QWidget):
         self.cols_hints = cols_hint if cols_hint else []
         self.cells = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
 
-        # пересчёт размера
+        # перерасчёт размера
         left_hint_width = self.get_left_hint_width()
         top_hint_height = self.get_top_hint_height()
         cell_size = self.get_cell_size()
@@ -272,3 +260,10 @@ class GameGrid(QWidget):
         new_height = top_hint_height + self.rows * cell_size
         self.setFixedSize(new_width, new_height)
         self.update()
+
+    def set_play_window(self, play_window):
+        self.play_window = play_window
+
+    def on_game_over(self):
+        if self.play_window:
+            self.play_window.game_over()
