@@ -19,18 +19,15 @@ class WinWindow(QMainWindow):
         main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.setSpacing(80)
 
-        # текст
         title = QLabel("Поздравляем! \n \n Уровень пройден :)")
         title.setStyleSheet("color: black; font-size: 50px; font-weight: bold; font-family: Montserrat")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title)
 
-        # горизонтальные кнопки
         buttons_layout = QHBoxLayout()
         buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         buttons_layout.setSpacing(20)
 
-        # кнопка "новая игра"
         new_game_btn = QPushButton("Новая игра")
         new_game_btn.setFixedSize(300, 80)
         new_game_btn.setStyleSheet("""
@@ -47,7 +44,6 @@ class WinWindow(QMainWindow):
         new_game_btn.clicked.connect(self.new_game)
         buttons_layout.addWidget(new_game_btn)
 
-        # кнопка "следующий уровень"
         next_level_btn = QPushButton("Следующий уровень")
         next_level_btn.setFixedSize(300, 80)
         next_level_btn.setStyleSheet("""
@@ -66,7 +62,6 @@ class WinWindow(QMainWindow):
 
         main_layout.addLayout(buttons_layout)
 
-        # кнопка "выйти в главное меню"
         go_hmpg_btn = QPushButton("Выйти в главное меню")
         go_hmpg_btn.setFixedSize(350, 80)
         go_hmpg_btn.setStyleSheet("""
@@ -99,17 +94,16 @@ class WinWindow(QMainWindow):
             next_level_num = current + 1
             if next_level_num <= 15:
                 self.game_window.set_level(next_level_num)
-                self.game_window.reset_game()
                 self.game_window.show()
             else:
                 self.game_window.show()
 
     def back_to_menu(self):
         self.close()
-        if self.main_window:
-            self.main_window.show()
         if self.game_window:
             self.game_window.close_game()
+        if self.main_window:
+            self.main_window.show()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:

@@ -6,6 +6,7 @@ from Grid import GameGrid
 from level_loader import load_level
 from RulesDialog import RulesDialog
 from Win import WinWindow
+from save_manager import SaveManager
 
 
 class GameWindow(QMainWindow):
@@ -117,7 +118,12 @@ class GameWindow(QMainWindow):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
+            self.save_progress()
             QApplication.quit()
+
+    def closeEvent(self, event):
+        self.save_progress()
+        event.accept()
 
     def update_hearts(self):
         full = QPixmap("heart.png").scaled(50, 40)
@@ -141,30 +147,25 @@ class GameWindow(QMainWindow):
             self.heart3.setPixmap(empty)
 
     def reset_game(self):
+        SaveManager.delete()
         self.lives = 3
         self.update_hearts()
         self.game_grid.reset_grid()
-
-    def next_level(self):
-        next_num = self.current_level + 1
-        if next_num <= 15:
-            self.set_level(next_num)
-
-    def close_game(self):
-        self.close()
 
     def back_to_menu(self):
         dialog = HomepageDialog(self)
         dialog.exec()
 
     def show_win(self):
-        self.hide()
-        win_window = WinWindow(self, self.main_window if hasattr(self, 'main_window') else None)
+        win_window = WinWindow(self, self.main_window)
         win_window.show()
+        self.hide()
 
     def back_to_main_menu(self):
         self.hide()
-        if self.menu_window:
+        if self.main_window:
+            self.main_window.show()
+        elif self.menu_window:
             main = self.menu_window
             while main and main.__class__.__name__ != "MainWindow":
                 main = main.parent()
@@ -198,6 +199,36 @@ class GameWindow(QMainWindow):
     def game_over(self):
         dialog = LoseDialog(self)
         dialog.exec()
+
+    def close_game(self):
+        self.close()
+
+    def save_progress(self):
+        SaveManager.save(self.current_level, self.game_grid.cells, self.lives)
+
+    def load_progress(self):
+        data = SaveManager.load()
+        if data:
+            self.current_level = data["level_num"]
+            self.lives = data["lives"]
+
+            level_data = load_level(self.current_level)
+            if level_data:
+                self.label1.setText(level_data["name"])
+                self.label2.setText(f"Сложность {level_data['difficulty']}/5")
+
+                self.game_grid.set_level(
+                    self.current_level,
+                    level_data["solution"],
+                    level_data.get("rows_hints", []),
+                    level_data.get("cols_hints", [])
+                )
+                self.game_grid.cells = data["cells"]
+                self.game_grid.update()
+
+            self.update_hearts()
+            return True
+        return False
 
 
 class NewGameDialog(QDialog):
@@ -271,8 +302,7 @@ class NewGameDialog(QDialog):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             return
-        else:
-            super().keyPressEvent(event)
+        super().keyPressEvent(event)
 
 
 class LoseDialog(QDialog):
@@ -343,30 +373,24 @@ class LoseDialog(QDialog):
     def on_yes(self):
         parent = self.parent()
         game_window = None
-
         while parent:
             if isinstance(parent, GameWindow):
                 game_window = parent
                 break
             parent = parent.parent()
-
         self.accept()
-
         if game_window:
             game_window.reset_game()
 
     def back_to_main_menu(self):
         parent = self.parent()
         game_window = None
-
         while parent:
             if isinstance(parent, GameWindow):
                 game_window = parent
                 break
             parent = parent.parent()
-
         self.accept()
-
         if game_window:
             game_window.back_to_main_menu()
 
@@ -450,38 +474,32 @@ class HomepageDialog(QDialog):
     def on_save(self):
         parent = self.parent()
         game_window = None
-
         while parent:
             if isinstance(parent, GameWindow):
                 game_window = parent
                 break
             parent = parent.parent()
-
         self.accept()
-
         if game_window:
+            game_window.save_progress()
             game_window.back_to_main_menu()
 
     def on_no_save(self):
         parent = self.parent()
         game_window = None
-
         while parent:
             if isinstance(parent, GameWindow):
                 game_window = parent
                 break
             parent = parent.parent()
-
         self.accept()
-
         if game_window:
             game_window.back_to_main_menu()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             return
-        else:
-            super().keyPressEvent(event)
+        super().keyPressEvent(event)
 
 
 if __name__ == '__main__':

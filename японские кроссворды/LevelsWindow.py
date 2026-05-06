@@ -1,13 +1,12 @@
 import sys
-import os
 from PyQt6.QtWidgets import QMainWindow, QWidget, QScrollArea, QLabel, QVBoxLayout, QPushButton, QFrame, QApplication, \
     QGridLayout
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPixmap
 import level_loader
-from PlayWindow import GameWindow
+import os
 
-# карточка уровня
+
 class LevelCard(QFrame):
     def __init__(self, level_data, parent=None):
         super().__init__(parent)
@@ -18,6 +17,11 @@ class LevelCard(QFrame):
         self.setStyleSheet("""
             QFrame {
                 background-color: white;
+                border: 2px solid #D8B4FE;
+                border-radius: 20px;
+            }
+            QFrame:hover {
+                background-color: #F5F0FF;
             }
         """)
 
@@ -26,7 +30,6 @@ class LevelCard(QFrame):
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        # название
         name = level_data.get("name")
         level_name = QLabel(name)
         level_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -35,7 +38,6 @@ class LevelCard(QFrame):
         level_name.setStyleSheet("color: black;")
         layout.addWidget(level_name)
 
-        # сложность
         difficulty = level_data.get("difficulty", 1)
         difficulty_label = QLabel(f"Сложность {difficulty}/5")
         difficulty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -43,23 +45,23 @@ class LevelCard(QFrame):
         difficulty_label.setStyleSheet("color: black;")
         layout.addWidget(difficulty_label)
 
-        # картинка
-        self.preview_label = QLabel()
-        self.preview_label.setFixedSize(200, 250)
-        self.preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview_label.setStyleSheet("background-color: #F0F0F0; border-radius: 10px;")
-
         preview_path = level_data.get("preview")
+        preview_label = QLabel()
+        preview_label.setFixedSize(250, 180)
+        preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        preview_label.setStyleSheet("background-color: #F0F0F0; border-radius: 10px;")
+
         if preview_path and os.path.exists(preview_path):
             pixmap = QPixmap(preview_path)
-            pixmap = pixmap.scaled(200, 170, Qt.AspectRatioMode.KeepAspectRatio,
-                                   Qt.TransformationMode.SmoothTransformation)
-            self.preview_label.setPixmap(pixmap)
+            scaled_pixmap = pixmap.scaled(230, 160, Qt.AspectRatioMode.KeepAspectRatio,
+                                          Qt.TransformationMode.SmoothTransformation)
+            preview_label.setPixmap(scaled_pixmap)
+        else:
+            preview_label.setText("🎮")
+            preview_label.setFont(QFont("Segoe UI Emoji", 60))
 
-        layout.addWidget(self.preview_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(preview_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        layout.addStretch()
-        # кнопка
         button = QPushButton(f"Уровень {self.level_num}")
         button.setFixedSize(180, 45)
         button.setStyleSheet("""
@@ -82,7 +84,7 @@ class LevelCard(QFrame):
         if hasattr(parent_window, 'open_level'):
             parent_window.open_level(self.level_num)
 
-# окно выбора уровня
+
 class LevelWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -92,7 +94,6 @@ class LevelWindow(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # заголовок
         header = QLabel("ВЫБОР УРОВНЯ", central_widget)
         header.move(100, 40)
         font = QFont()
@@ -102,7 +103,6 @@ class LevelWindow(QMainWindow):
         header.setFont(font)
         header.setStyleSheet("color: black;")
 
-        # кнопка "выйти в главное меню"
         button = QPushButton("Выйти в главное меню", central_widget)
         button.setFixedSize(270, 80)
         button.move(1200, 45)
@@ -110,9 +110,6 @@ class LevelWindow(QMainWindow):
             QPushButton {
                 background-color: #A670D9;
                 border-radius: 20px;
-                }
-                QPushButton:hover {
-                background-color: #C4A4EE;
             }
         """)
         fontbut = QFont()
@@ -122,19 +119,16 @@ class LevelWindow(QMainWindow):
         button.setFont(fontbut)
         button.clicked.connect(self.on_button_click)
 
-        # область прокрутки
         scroll = QScrollArea(central_widget)
         scroll.setGeometry(50, 150, 1400, 700)
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("border: none; background-color: white;")
 
-        # контейнер для карточек
         cards_container = QWidget()
         cards_layout = QGridLayout(cards_container)
         cards_layout.setSpacing(30)
         cards_layout.setContentsMargins(30, 30, 30, 30)
 
-        # загрузка уровней и создание карточек
         for level_num in range(1, 16):
             level_data = level_loader.load_level(level_num)
             if level_data:
@@ -144,9 +138,7 @@ class LevelWindow(QMainWindow):
                 cards_layout.addWidget(card, row, col)
 
         scroll.setWidget(cards_container)
-
         self.showFullScreen()
-        self.extra_window = None
 
     def on_button_click(self):
         self.hide()
@@ -154,16 +146,10 @@ class LevelWindow(QMainWindow):
 
     def open_level(self, level_num):
         from PlayWindow import GameWindow
-        if not hasattr(self, 'game_window'):
-            self.game_window = GameWindow(self, self.parent())
+        self.game_window = GameWindow(self, self.parent())
         self.game_window.set_level(level_num)
         self.game_window.show()
         self.hide()
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Escape:
-            QApplication.quit()
-
 
 
 if __name__ == '__main__':
