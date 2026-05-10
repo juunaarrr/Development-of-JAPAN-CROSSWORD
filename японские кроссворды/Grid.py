@@ -228,12 +228,16 @@ class GameGrid(QWidget):
 
     #проверка победы
     def check_win(self):
+        if self.signalsBlocked():
+            return False
+
         for row in range(self.rows):
             for col in range(self.cols):
                 if self.solution[row][col] == 1 and self.cells[row][col] != 1:
                     return False
                 if self.solution[row][col] == 0 and self.cells[row][col] == 1:
                     return False
+
         if self.play_window:
             self.play_window.show_win()
         return True

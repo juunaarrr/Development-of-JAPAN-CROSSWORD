@@ -7,6 +7,7 @@ from level_loader import load_level
 from RulesDialog import RulesDialog
 from Win import WinWindow
 from save_manager import SaveManager
+from progress_manager import ProgressManager
 
 
 class GameWindow(QMainWindow):
@@ -157,34 +158,36 @@ class GameWindow(QMainWindow):
         dialog.exec()
 
     def show_win(self):
+        ProgressManager.add_level(self.current_level)
+
         win_window = WinWindow(self, self.main_window)
         win_window.show()
         self.hide()
 
     def back_to_main_menu(self):
         self.hide()
-        if self.main_window:
+        if self.menu_window:
+            if hasattr(self.menu_window, 'refresh'):
+                self.menu_window.refresh()
+            self.menu_window.show()
+        elif self.main_window:
             self.main_window.show()
-        elif self.menu_window:
-            main = self.menu_window
-            while main and main.__class__.__name__ != "MainWindow":
-                main = main.parent()
-            if main:
-                main.show()
-            else:
-                self.menu_window.show()
 
     def set_level(self, level_num):
         self.current_level = level_num
         level_data = load_level(level_num)
         self.label1.setText(level_data["name"])
         self.label2.setText(f"Сложность {level_data['difficulty']}/5")
+
+        self.game_grid.blockSignals(True)
         self.game_grid.set_level(
             level_num,
             level_data["solution"],
             level_data.get("rows_hints", []),
             level_data.get("cols_hints", [])
         )
+        self.game_grid.blockSignals(False)
+
         self.lives = 3
         self.update_hearts()
 

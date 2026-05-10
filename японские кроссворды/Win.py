@@ -1,5 +1,6 @@
 import sys
-from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QMainWindow, QApplication, QHBoxLayout, QVBoxLayout
+from PyQt6.QtWidgets import QWidget, QPushButton, QLabel, QMainWindow, QApplication, QHBoxLayout, QVBoxLayout, \
+    QMessageBox
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt
 
@@ -44,9 +45,9 @@ class WinWindow(QMainWindow):
         new_game_btn.clicked.connect(self.new_game)
         buttons_layout.addWidget(new_game_btn)
 
-        next_level_btn = QPushButton("Следующий уровень")
-        next_level_btn.setFixedSize(300, 80)
-        next_level_btn.setStyleSheet("""
+        self.next_level_btn = QPushButton("Следующий уровень")
+        self.next_level_btn.setFixedSize(300, 80)
+        self.next_level_btn.setStyleSheet("""
             QPushButton {
                 background-color: #D8B4FE;
                 border-radius: 20px;
@@ -57,8 +58,8 @@ class WinWindow(QMainWindow):
                 background-color: #C4A4EE;
             }
         """)
-        next_level_btn.clicked.connect(self.next_level)
-        buttons_layout.addWidget(next_level_btn)
+        self.next_level_btn.clicked.connect(self.next_level)
+        buttons_layout.addWidget(self.next_level_btn)
 
         main_layout.addLayout(buttons_layout)
 
@@ -79,6 +80,9 @@ class WinWindow(QMainWindow):
         go_hmpg_btn.clicked.connect(self.back_to_menu)
         main_layout.addWidget(go_hmpg_btn, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        if self.game_window and self.game_window.current_level >= 15:
+            self.next_level_btn.hide()
+
         self.showFullScreen()
 
     def new_game(self):
@@ -88,30 +92,48 @@ class WinWindow(QMainWindow):
             self.game_window.show()
 
     def next_level(self):
+        current = self.game_window.current_level
+        next_level_num = current + 1
+
+        if next_level_num > 15:
+            self.show_all_completed()
+            return
+
         self.close()
+
         if self.game_window:
-            current = self.game_window.current_level
-            next_level_num = current + 1
-            if next_level_num <= 15:
-                self.game_window.set_level(next_level_num)
+            self.game_window.current_level = next_level_num
+            self.game_window.set_level(next_level_num)
+            self.game_window.show()
+
+    def show_all_completed(self):
+        msg = QMessageBox()
+        msg.setWindowTitle("Поздравляем!")
+        msg.setText("Поздравляем!\nВы прошли все уровни!")
+        msg.setInformativeText("Хотите начать игру заново?")
+        msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg.button(QMessageBox.StandardButton.Yes).setText("Начать заново")
+        msg.button(QMessageBox.StandardButton.No).setText("Выйти в главное меню")
+        msg.setDefaultButton(QMessageBox.StandardButton.Yes)
+
+        result = msg.exec()
+
+        if result == QMessageBox.StandardButton.Yes:
+            from progress_manager import ProgressManager
+            ProgressManager.reset()
+            if self.game_window:
+                self.game_window.current_level = 1
+                self.game_window.set_level(1)
                 self.game_window.show()
-            else:
-                self.game_window.show()
+            self.close()
+        else:
+            self.back_to_menu()
 
     def back_to_menu(self):
         self.close()
-        if self.game_window:
-            self.game_window.close_game()
         if self.main_window:
             self.main_window.show()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:
             QApplication.quit()
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = WinWindow()
-    window.show()
-    app.exec()

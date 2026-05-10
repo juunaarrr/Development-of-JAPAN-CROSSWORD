@@ -6,8 +6,8 @@ SAVE_FILE = "save.json"
 
 class SaveManager:
     @staticmethod
+    #сохраняет прогресс в файл
     def save(level_num, cells, lives):
-        """сохраняет прогресс в файл"""
         data = {
             "level_num": level_num,
             "cells": cells,
@@ -17,8 +17,8 @@ class SaveManager:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
     @staticmethod
+    #загружает прогресс из файла
     def load():
-        """загружает прогресс из файла"""
         if not os.path.exists(SAVE_FILE):
             return None
 
@@ -36,7 +36,7 @@ class SaveManager:
             return None
 
     @staticmethod
+    #удаляет файл
     def delete():
-        """удаляет файл сохранения"""
         if os.path.exists(SAVE_FILE):
             os.remove(SAVE_FILE)

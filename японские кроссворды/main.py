@@ -81,8 +81,6 @@ class MainWindow(QMainWindow):
         if game_window.load_progress():
             game_window.show()
             self.hide()
-        else:
-            print("Нет сохранения!")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key.Key_Escape:

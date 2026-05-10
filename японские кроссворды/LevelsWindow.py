@@ -5,6 +5,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QPixmap
 import level_loader
 import os
+from progress_manager import ProgressManager
 
 
 class LevelCard(QFrame):
@@ -30,13 +31,18 @@ class LevelCard(QFrame):
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        name = level_data.get("name")
-        level_name = QLabel(name)
-        level_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        level_name.setFont(QFont("Montserrat", 18, QFont.Weight.Bold))
-        level_name.setWordWrap(True)
-        level_name.setStyleSheet("color: black;")
-        layout.addWidget(level_name)
+        is_completed = ProgressManager.is_completed(self.level_num)
+
+        name_text = level_data.get("name", "")
+        if is_completed:
+            name_text = f"✅ {name_text}"
+
+        self.level_name = QLabel(name_text)
+        self.level_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.level_name.setFont(QFont("Montserrat", 18, QFont.Weight.Bold))
+        self.level_name.setWordWrap(True)
+        self.level_name.setStyleSheet("color: black;")
+        layout.addWidget(self.level_name)
 
         difficulty = level_data.get("difficulty", 1)
         difficulty_label = QLabel(f"Сложность {difficulty}/5")
@@ -119,15 +125,24 @@ class LevelWindow(QMainWindow):
         button.setFont(fontbut)
         button.clicked.connect(self.on_button_click)
 
-        scroll = QScrollArea(central_widget)
-        scroll.setGeometry(50, 150, 1400, 700)
-        scroll.setWidgetResizable(True)
-        scroll.setStyleSheet("border: none; background-color: white;")
+        self.scroll = QScrollArea(central_widget)
+        self.scroll.setGeometry(50, 150, 1400, 700)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setStyleSheet("border: none; background-color: white;")
 
-        cards_container = QWidget()
-        cards_layout = QGridLayout(cards_container)
-        cards_layout.setSpacing(30)
-        cards_layout.setContentsMargins(30, 30, 30, 30)
+        self.cards_container = QWidget()
+        self.cards_layout = QGridLayout(self.cards_container)
+        self.cards_layout.setSpacing(30)
+        self.cards_layout.setContentsMargins(30, 30, 30, 30)
+
+        self.scroll.setWidget(self.cards_container)
+        self.load_cards()
+
+        self.showFullScreen()
+
+    def load_cards(self):
+        for widget in self.cards_container.findChildren(LevelCard):
+            widget.deleteLater()
 
         for level_num in range(1, 16):
             level_data = level_loader.load_level(level_num)
@@ -135,10 +150,22 @@ class LevelWindow(QMainWindow):
                 card = LevelCard(level_data)
                 row = (level_num - 1) // 3
                 col = (level_num - 1) % 3
-                cards_layout.addWidget(card, row, col)
+                self.cards_layout.addWidget(card, row, col)
 
-        scroll.setWidget(cards_container)
-        self.showFullScreen()
+    def refresh(self):
+        for widget in self.cards_container.findChildren(LevelCard):
+            widget.deleteLater()
+
+        for level_num in range(1, 16):
+            level_data = level_loader.load_level(level_num)
+            if level_data:
+                card = LevelCard(level_data)
+                row = (level_num - 1) // 3
+                col = (level_num - 1) % 3
+                self.cards_layout.addWidget(card, row, col)
+
+    def refresh_cards(self):
+        self.load_cards()
 
     def on_button_click(self):
         self.hide()
@@ -150,6 +177,10 @@ class LevelWindow(QMainWindow):
         self.game_window.set_level(level_num)
         self.game_window.show()
         self.hide()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            QApplication.quit()
 
 
 if __name__ == '__main__':
