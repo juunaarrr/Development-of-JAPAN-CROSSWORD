@@ -1,7 +1,8 @@
 {
-  "name": "Ель",
+  "name": "Могила",
   "number": 5,
   "size": 5,
+  "preview": "images/grave.png",
   "difficulty": 1,
   "solution": [
     [0, 0, 1, 0, 0],

@@ -2,6 +2,7 @@
   "name": "Смайлик",
   "number": 1,
   "size": 5,
+  "preview": "images/smile.png",
   "difficulty": 1,
   "solution": [
     [0, 1, 0, 1, 0],

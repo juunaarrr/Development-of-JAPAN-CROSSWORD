@@ -2,6 +2,7 @@
   "name": "Заяц",
   "number": 6,
   "size": 10,
+  "preview": "images/rabbit.png",
   "difficulty": 2,
   "solution": [
     [1, 1, 1, 1, 0, 0, 1, 1, 1, 1],

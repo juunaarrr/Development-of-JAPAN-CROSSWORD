@@ -8,6 +8,7 @@ from RulesDialog import RulesDialog
 from Win import WinWindow
 from save_manager import SaveManager
 from progress_manager import ProgressManager
+from helpers import resource_path
 
 
 class GameWindow(QMainWindow):
@@ -45,7 +46,7 @@ class GameWindow(QMainWindow):
 
         self.house_btn = QPushButton()
         self.house_btn.setFixedSize(50, 50)
-        self.house_btn.setIcon(QIcon("house.png"))
+        self.house_btn.setIcon(QIcon("images\house.png"))
         self.house_btn.setIconSize(QSize(30, 30))
         self.house_btn.setStyleSheet("""
             QPushButton {
@@ -61,7 +62,9 @@ class GameWindow(QMainWindow):
         hearts_layout.addWidget(self.house_btn)
 
         self.lives = 3
-        heart_pixmap = QPixmap("heart.png").scaled(50, 40)
+        heart_pixmap = QPixmap("images\heart.png")
+        if not heart_pixmap.isNull():
+            heart_pixmap = heart_pixmap.scaled(50, 40)
 
         self.heart1 = QLabel()
         self.heart2 = QLabel()
@@ -96,7 +99,7 @@ class GameWindow(QMainWindow):
         self.rules_btn.clicked.connect(self.show_rules)
 
         self.game_grid = GameGrid(central_widget, self)
-        main_layout.addWidget(self.game_grid, alignment=Qt.AlignmentFlag.AlignVCenter)
+        main_layout.addWidget(self.game_grid, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self.start_btn = QPushButton("Начать новую игру")
         self.start_btn.setFixedSize(270, 80)
@@ -127,8 +130,12 @@ class GameWindow(QMainWindow):
         event.accept()
 
     def update_hearts(self):
-        full = QPixmap("heart.png").scaled(50, 40)
-        empty = QPixmap("heart_empty.png").scaled(50, 40)
+        full = QPixmap(resource_path("images/heart.png"))
+        if not full.isNull():
+            full = full.scaled(50, 40)
+
+        empty = QPixmap(50, 40)
+        empty.fill(Qt.GlobalColor.transparent)
 
         if self.lives == 3:
             self.heart1.setPixmap(full)
@@ -159,7 +166,6 @@ class GameWindow(QMainWindow):
 
     def show_win(self):
         ProgressManager.add_level(self.current_level)
-
         win_window = WinWindow(self, self.main_window)
         win_window.show()
         self.hide()
@@ -179,14 +185,12 @@ class GameWindow(QMainWindow):
         self.label1.setText(level_data["name"])
         self.label2.setText(f"Сложность {level_data['difficulty']}/5")
 
-        self.game_grid.blockSignals(True)
         self.game_grid.set_level(
             level_num,
             level_data["solution"],
             level_data.get("rows_hints", []),
             level_data.get("cols_hints", [])
         )
-        self.game_grid.blockSignals(False)
 
         self.lives = 3
         self.update_hearts()

@@ -1,7 +1,8 @@
 {
-  "name": "Кошка",
+  "name": "Жук",
   "number": 13,
   "size": 15,
+  "preview": "images/beetle.png",
   "difficulty": 3,
   "solution": [
     [0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],

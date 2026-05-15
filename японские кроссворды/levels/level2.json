@@ -2,6 +2,7 @@
   "name": "Сердце",
   "number": 2,
   "size": 5,
+  "preview": "images/smallheart.png",
   "difficulty": 1,
   "solution": [
     [0, 1, 0, 1, 0],

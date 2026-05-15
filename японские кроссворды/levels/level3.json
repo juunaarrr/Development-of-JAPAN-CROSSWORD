@@ -2,6 +2,7 @@
   "name": "Шахматная доска",
   "number": 3,
   "size": 5,
+  "preview": "images/chess.png",
   "difficulty": 1,
   "solution": [
     [0, 1, 0, 1, 0],

@@ -2,6 +2,7 @@
   "name": "Веер",
   "number": 14,
   "size": 15,
+  "preview": "images/fan.png",
   "difficulty": 3,
   "solution": [
     [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],

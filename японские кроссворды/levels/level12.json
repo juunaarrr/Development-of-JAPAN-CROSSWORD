@@ -2,6 +2,7 @@
   "name": "Замок",
   "number": 12,
   "size": 15,
+  "preview": "images/castle.png",
   "difficulty": 4,
   "solution": [
     [0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0],

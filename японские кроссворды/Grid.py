@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtGui import QPainter, QFont, QPen, QColor
+from PyQt6.QtGui import QPainter, QFont, QPen
 from PyQt6.QtCore import Qt, QSize, QRect
 import level_loader
 
@@ -16,8 +16,12 @@ class GameGrid(QWidget):
         self.rows_hints = []
         self.cols_hints = []
         self.cells = []
+        self.solution = []
         self.is_dragging = False
         self.last_action = None
+
+        # начальный размер, чтобы не было ошибок
+        self.setFixedSize(400, 400)
 
         # загружаем уровень по умолчанию
         level_data = level_loader.load_level(1)
@@ -28,19 +32,21 @@ class GameGrid(QWidget):
                 level_data.get("rows_hints", []),
                 level_data.get("cols_hints", [])
             )
-    #возвращаем размер клетки в зависимости от размера сетки
+
     def get_cell_size(self):
         if self.rows >= 15:
             return self.CELL_SIZE_SMALL
         else:
             return self.CELL_SIZE_LARGE
-    #макимсальное количество подсказок в столбце
+
     def get_max_col_hints_count(self):
         if not self.cols_hints:
             return 1
         return max(len(hints) for hints in self.cols_hints)
 
     def get_left_hint_width(self):
+        if not self.rows_hints:
+            return 55
         max_len = 0
         for hints in self.rows_hints:
             text = ", ".join(map(str, hints))
@@ -49,6 +55,8 @@ class GameGrid(QWidget):
         return max(text_width + 10, 55)
 
     def get_top_hint_height(self):
+        if not self.cols_hints:
+            return 75
         max_count = self.get_max_col_hints_count()
         return max(max_count * 20 + 15, 75)
 
@@ -60,7 +68,6 @@ class GameGrid(QWidget):
         height = top_hint_height + self.rows * cell_size
         return QSize(width, height)
 
-    #отрисовка
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setFont(QFont("Montserrat", 11, QFont.Weight.Bold))
@@ -71,6 +78,10 @@ class GameGrid(QWidget):
 
         game_width = self.cols * cell_size
         game_height = self.rows * cell_size
+
+        # защита от нулевых размеров
+        if game_width <= 0 or game_height <= 0:
+            return
 
         painter.fillRect(0, 0, left_hint_width, self.height(), Qt.GlobalColor.lightGray)
         painter.fillRect(0, 0, self.width(), top_hint_height, Qt.GlobalColor.lightGray)
@@ -89,7 +100,6 @@ class GameGrid(QWidget):
                     rect = QRect(x, text_y - line_height + 5, cell_size, line_height)
                     painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
 
-        # подсказки строк (слева)
         for row in range(self.rows):
             hints = self.rows_hints[row] if row < len(self.rows_hints) else []
             x = 5
@@ -98,21 +108,20 @@ class GameGrid(QWidget):
             rect = QRect(x, y, left_hint_width - 10, cell_size)
             painter.drawText(rect, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, text)
 
-        # заливка клеток (чёрные и красные крестики)
         for row in range(self.rows):
             for col in range(self.cols):
                 x = left_hint_width + col * cell_size
                 y = top_hint_height + row * cell_size
 
-                if self.cells[row][col] == 1:
-                    painter.fillRect(x, y, cell_size, cell_size, Qt.GlobalColor.black)
-                elif self.cells[row][col] == 2:
-                    painter.setPen(QPen(Qt.GlobalColor.red, 2))
-                    offset = 4
-                    painter.drawLine(x + offset, y + offset, x + cell_size - offset, y + cell_size - offset)
-                    painter.drawLine(x + cell_size - offset, y + offset, x + offset, y + cell_size - offset)
+                if self.cells and row < len(self.cells) and col < len(self.cells[row]):
+                    if self.cells[row][col] == 1:
+                        painter.fillRect(x, y, cell_size, cell_size, Qt.GlobalColor.black)
+                    elif self.cells[row][col] == 2:
+                        painter.setPen(QPen(Qt.GlobalColor.red, 2))
+                        offset = 4
+                        painter.drawLine(x + offset, y + offset, x + cell_size - offset, y + cell_size - offset)
+                        painter.drawLine(x + cell_size - offset, y + offset, x + offset, y + cell_size - offset)
 
-        # тонкие линии сетки
         painter.setPen(QPen(Qt.GlobalColor.black, 1))
         painter.setBrush(Qt.BrushStyle.NoBrush)
 
@@ -124,7 +133,6 @@ class GameGrid(QWidget):
             x = left_hint_width + col * cell_size
             painter.drawLine(x, top_hint_height, x, top_hint_height + game_height)
 
-        # толстые линии (каждые 5 клеток)
         thick_pen = QPen(Qt.GlobalColor.black, 2)
         painter.setPen(thick_pen)
 
@@ -136,8 +144,9 @@ class GameGrid(QWidget):
             x = left_hint_width + col * cell_size
             painter.drawLine(x, top_hint_height, x, top_hint_height + game_height)
 
-    #действия с клеткой
     def apply_action(self, row, col, action):
+        if not self.solution:
+            return
         if action == 'paint':
             if self.cells[row][col] == 1:
                 self.cells[row][col] = 0
@@ -166,8 +175,10 @@ class GameGrid(QWidget):
                     return
         self.update()
 
-    #нажатие мыши
     def mousePressEvent(self, event):
+        if not self.solution:
+            return
+
         left_hint_width = self.get_left_hint_width()
         top_hint_height = self.get_top_hint_height()
         cell_size = self.get_cell_size()
@@ -191,9 +202,8 @@ class GameGrid(QWidget):
                 self.apply_action(row, col, 'cross')
             self.check_win()
 
-    #закраска при перетаскивании мыши
     def mouseMoveEvent(self, event):
-        if not self.is_dragging:
+        if not self.is_dragging or not self.solution:
             return
 
         left_hint_width = self.get_left_hint_width()
@@ -226,8 +236,9 @@ class GameGrid(QWidget):
         self.last_action = None
         self.check_win()
 
-    #проверка победы
     def check_win(self):
+        if not self.solution:
+            return False
         if self.signalsBlocked():
             return False
 
@@ -242,12 +253,12 @@ class GameGrid(QWidget):
             self.play_window.show_win()
         return True
 
-    #сброс сетки
     def reset_grid(self):
+        if not self.solution:
+            return
         self.cells = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
         self.update()
 
-    #загрузка уровня
     def set_level(self, level_num, solution, rows_hint=None, cols_hint=None):
         self.solution = solution
         self.rows = len(solution)
@@ -256,7 +267,6 @@ class GameGrid(QWidget):
         self.cols_hints = cols_hint if cols_hint else []
         self.cells = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
 
-        # перерасчёт размера
         left_hint_width = self.get_left_hint_width()
         top_hint_height = self.get_top_hint_height()
         cell_size = self.get_cell_size()

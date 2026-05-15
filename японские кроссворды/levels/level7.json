@@ -2,6 +2,7 @@
   "name": "Черепаха",
   "number": 7,
   "size": 10,
+  "preview": "images/turtle.png",
   "difficulty": 2,
   "solution": [
     [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],

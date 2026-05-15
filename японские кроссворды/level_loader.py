@@ -1,14 +1,15 @@
 import json
 import os
+from helpers import resource_path
 
 
 def load_level(level_number):
-    filename = f"levels/level{level_number}.json"
+    levels_dir = resource_path("levels")
+    filename = os.path.join(levels_dir, f"level{level_number}.json")
 
     if not os.path.exists(filename):
         print(f"Файл {filename} не найден")
         return None
 
     with open(filename, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-        return data
+        return json.load(f)

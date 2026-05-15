@@ -6,6 +6,7 @@ from PyQt6.QtGui import QFont, QPixmap
 import level_loader
 import os
 from progress_manager import ProgressManager
+from helpers import resource_path
 
 
 class LevelCard(QFrame):
@@ -57,14 +58,22 @@ class LevelCard(QFrame):
         preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         preview_label.setStyleSheet("background-color: #F0F0F0; border-radius: 10px;")
 
-        if preview_path and os.path.exists(preview_path):
-            pixmap = QPixmap(preview_path)
-            scaled_pixmap = pixmap.scaled(230, 160, Qt.AspectRatioMode.KeepAspectRatio,
-                                          Qt.TransformationMode.SmoothTransformation)
-            preview_label.setPixmap(scaled_pixmap)
-        else:
-            preview_label.setText("🎮")
-            preview_label.setFont(QFont("Segoe UI Emoji", 60))
+        if preview_path:
+            print(preview_path)
+            print(resource_path(preview_path))
+            print(os.path.exists(resource_path(preview_path)))
+
+            full_path = resource_path(preview_path)
+
+            if os.path.exists(full_path):
+                pixmap = QPixmap(full_path)
+                scaled_pixmap = pixmap.scaled(
+                    230,
+                    160,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation
+                )
+                preview_label.setPixmap(scaled_pixmap)
 
         layout.addWidget(preview_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
