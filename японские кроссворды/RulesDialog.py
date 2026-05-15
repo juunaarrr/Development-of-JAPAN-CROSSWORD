@@ -33,7 +33,7 @@ class RulesDialog(QDialog):
                        "Таким образом, на поле постепенно появляются пометки, которые на \n "
                        "следующем шаге помогают вычислить новые метки, и так до тех пор, \n "
                        "пока кроссворд не будет полностью разгадан (стоит отметить, что, если\n "
-                       "клетка закрашена неправильно, то снимается одна жизнь.")
+                       "клетка закрашена неправильно, то снимается одна жизнь.)")
         rules.setStyleSheet("color: black; font-size: 18px; font-weight: light; font-family: Montserrat;")
         rules.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(rules)
