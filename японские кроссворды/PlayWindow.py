@@ -46,7 +46,7 @@ class GameWindow(QMainWindow):
 
         self.house_btn = QPushButton()
         self.house_btn.setFixedSize(50, 50)
-        self.house_btn.setIcon(QIcon("images\house.png"))
+        self.house_btn.setIcon(QIcon(resource_path("images/house.png")))
         self.house_btn.setIconSize(QSize(30, 30))
         self.house_btn.setStyleSheet("""
             QPushButton {
@@ -62,7 +62,7 @@ class GameWindow(QMainWindow):
         hearts_layout.addWidget(self.house_btn)
 
         self.lives = 3
-        heart_pixmap = QPixmap("images\heart.png")
+        heart_pixmap = QPixmap(resource_path("images/heart.png"))
         if not heart_pixmap.isNull():
             heart_pixmap = heart_pixmap.scaled(50, 40)
 

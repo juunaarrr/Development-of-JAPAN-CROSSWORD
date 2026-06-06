@@ -20,10 +20,8 @@ class GameGrid(QWidget):
         self.is_dragging = False
         self.last_action = None
 
-        # начальный размер, чтобы не было ошибок
         self.setFixedSize(400, 400)
 
-        # загружаем уровень по умолчанию
         level_data = level_loader.load_level(1)
         if level_data:
             self.set_level(

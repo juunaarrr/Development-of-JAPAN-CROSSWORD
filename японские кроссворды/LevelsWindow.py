@@ -58,14 +58,10 @@ class LevelCard(QFrame):
         preview_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         preview_label.setStyleSheet("background-color: #F0F0F0; border-radius: 10px;")
 
-        if preview_path:
-            print(preview_path)
-            print(resource_path(preview_path))
-            print(os.path.exists(resource_path(preview_path)))
 
-            full_path = resource_path(preview_path)
+        full_path = resource_path(preview_path)
 
-            if os.path.exists(full_path):
+        if os.path.exists(full_path):
                 pixmap = QPixmap(full_path)
                 scaled_pixmap = pixmap.scaled(
                     230,
